@@ -23,7 +23,7 @@
     "jscs": "^1.9.0"
   },
   "scripts": {
-    "test": "./node_modules/.bin/jscs lib/*.js && ./node_modules/.bin/jshint lib/*.js"
+    "test": "jscs lib/*.js spec/*.js && jshint lib/*.js spec/*.js"
   },
   "keywords": [
     "build",
