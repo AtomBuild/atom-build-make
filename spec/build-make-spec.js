@@ -71,7 +71,7 @@ describe('atom-build make provider', function() {
       var targets = Array.prototype.slice.call(list).map(function (el) {
         return el.textContent;
       });
-      expect(targets).toEqual([ 'GNU Make: default' ]);
+      expect(targets).toEqual([ 'GNU Make: default', 'GNU Make: all' ]);
     });
   });
 });
