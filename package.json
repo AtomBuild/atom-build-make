@@ -2,7 +2,7 @@
   "name": "build-make",
   "version": "0.2.1",
   "description": "Runs GNU Make",
-  "repository": "https://github.com/noseglid/atom-build-make",
+  "repository": "https://github.com/AtomBuild/atom-build-make",
   "license": "MIT",
   "engines": {
     "atom": "^1.0.0"
