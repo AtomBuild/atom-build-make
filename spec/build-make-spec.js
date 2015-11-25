@@ -23,7 +23,6 @@ describe('make', () => {
 
   describe('when makefile exists', () => {
     it('should be eligible', () => {
-      console.log(directory, builder.isEligable(directory));
       fs.writeFileSync(directory + 'Makefile', fs.readFileSync(__dirname + '/Makefile'));
       expect(builder.isEligable(directory)).toBe(true);
     });
