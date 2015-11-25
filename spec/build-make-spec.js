@@ -1,77 +1,45 @@
-'use strict';
+'use babel';
 
-var temp = require('temp');
-var fs = require('fs-extra');
-var specHelpers = require('atom-build-spec-helpers');
+import fs from 'fs-extra';
+import temp from 'temp';
+import { vouch } from 'atom-build-spec-helpers';
+import { provideBuilder } from '../lib/make';
 
-describe('atom-build make provider', function() {
-  var directory;
-  var workspaceElement;
+describe('make', () => {
+  let directory;
+  const builder = provideBuilder();
 
-  beforeEach(function () {
-    workspaceElement = atom.views.getView(atom.workspace);
-    jasmine.attachToDOM(workspaceElement);
-    jasmine.unspy(window, 'setTimeout');
-    jasmine.unspy(window, 'clearTimeout');
-
-    waitsForPromise(function() {
-      return specHelpers.vouch(temp.mkdir, 'atom-build-make-spec-').then(function (dir) {
-        return specHelpers.vouch(fs.realpath, dir);
-      }).then(function (dir) {
-        directory = dir + '/';
-        atom.project.setPaths([ directory ]);
-        return Promise.all([
-          atom.packages.activatePackage('build'),
-          atom.packages.activatePackage('build-make')
-        ]);
-      });
+  beforeEach(() => {
+    waitsForPromise(() => {
+      return vouch(temp.mkdir, 'atom-build-make-spec-')
+        .then((dir) => vouch(fs.realpath, dir))
+        .then((dir) => (directory = `${dir}/`));
     });
   });
 
-  afterEach(function() {
+  afterEach(() => {
     fs.removeSync(directory);
   });
 
-  it('should show the build panel if Makefile exists', function() {
-    expect(workspaceElement.querySelector('.build')).not.toExist();
-
-    fs.writeFileSync(directory + 'Makefile', fs.readFileSync(__dirname + '/Makefile'));
-    atom.commands.dispatch(workspaceElement, 'build:trigger');
-
-    waitsFor(function() {
-      return workspaceElement.querySelector('.build .title') &&
-        workspaceElement.querySelector('.build .title').classList.contains('success');
+  describe('when makefile exists', () => {
+    it('should be eligible', () => {
+      console.log(directory, builder.isEligable(directory));
+      fs.writeFileSync(directory + 'Makefile', fs.readFileSync(__dirname + '/Makefile'));
+      expect(builder.isEligable(directory)).toBe(true);
     });
 
-    runs(function() {
-      expect(workspaceElement.querySelector('.build')).toExist();
-
-      // To make sure it does not execute with sh (shell)
-      expect(workspaceElement.querySelector('.build .output').textContent).toMatch(/Executing: make/);
-
-      expect(workspaceElement.querySelector('.build .output').textContent).toMatch(/Surprising is the passing of time\nbut not so, as the time of passing/);
-    });
-  });
-
-  it('should list the default GNU Make target in SelectListView', function () {
-    expect(workspaceElement.querySelector('.build')).not.toExist();
-
-    fs.writeFileSync(directory + 'Makefile', fs.readFileSync(__dirname + '/Makefile'));
-
-    runs(function () {
-      atom.commands.dispatch(workspaceElement, 'build:select-active-target');
-    });
-
-    waitsFor(function () {
-      return workspaceElement.querySelector('.select-list li.build-target');
-    });
-
-    runs(function () {
-      var list = workspaceElement.querySelectorAll('.select-list li.build-target');
-      var targets = Array.prototype.slice.call(list).map(function (el) {
-        return el.textContent;
+    it('should give default target', () => {
+      fs.writeFileSync(directory + 'Makefile', fs.readFileSync(__dirname + '/Makefile'));
+      waitsForPromise(() => {
+        return Promise.resolve(builder.settings(directory)).then((settings) => {
+          expect(settings.length).toBe(1);
+          const s = settings[0];
+          expect(s.name).toBe('GNU Make: default');
+          expect(s.exec).toBe('make');
+          expect(s.args).toBe(undefined);
+          expect(s.sh).toBe(false);
+        });
       });
-      expect(targets).toEqual([ 'GNU Make: default' ]);
     });
   });
 });
