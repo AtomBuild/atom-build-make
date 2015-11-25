@@ -41,4 +41,10 @@ describe('make', () => {
       });
     });
   });
+
+  describe('when makefile does not exist', () => {
+    it('should not be eligible', () => {
+      expect(builder.isEligable(directory)).toBe(false);
+    });
+  });
 });
