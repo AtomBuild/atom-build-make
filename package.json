@@ -1,6 +1,6 @@
 {
   "name": "build-make",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Runs GNU Make",
   "repository": "https://github.com/AtomBuild/atom-build-make",
   "license": "MIT",
