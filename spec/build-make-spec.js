@@ -7,13 +7,15 @@ import { provideBuilder } from '../lib/make';
 
 describe('make', () => {
   let directory;
-  const builder = provideBuilder();
+  let builder;
+  const Builder = provideBuilder();
 
   beforeEach(() => {
     waitsForPromise(() => {
       return vouch(temp.mkdir, 'atom-build-make-spec-')
         .then((dir) => vouch(fs.realpath, dir))
-        .then((dir) => (directory = `${dir}/`));
+        .then((dir) => (directory = `${dir}/`))
+        .then((dir) => builder = new Builder(dir));
     });
   });
 
@@ -24,7 +26,7 @@ describe('make', () => {
   describe('when makefile exists', () => {
     it('should be eligible', () => {
       fs.writeFileSync(directory + 'Makefile', fs.readFileSync(__dirname + '/Makefile'));
-      expect(builder.isEligable(directory)).toBe(true);
+      expect(builder.isEligible(directory)).toBe(true);
     });
 
     it('should give default target', () => {
@@ -44,7 +46,7 @@ describe('make', () => {
 
   describe('when makefile does not exist', () => {
     it('should not be eligible', () => {
-      expect(builder.isEligable(directory)).toBe(false);
+      expect(builder.isEligible(directory)).toBe(false);
     });
   });
 });
