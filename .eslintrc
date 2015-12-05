@@ -1,4 +1,7 @@
 {
   "parser": "babel-eslint",
-  "extends": "atom-build"
+  "extends": "atom-build",
+  "rules": {
+    "no-multiple-empty-lines": [2, {"max": 1, "maxEOF": 1}],
+  }
 }
