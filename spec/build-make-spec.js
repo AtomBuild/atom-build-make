@@ -24,21 +24,60 @@ describe('make', () => {
   });
 
   describe('when makefile exists', () => {
+    beforeEach(() => {
+      fs.writeFileSync(directory + 'Makefile', fs.readFileSync(`${__dirname}/Makefile`));
+    });
+
     it('should be eligible', () => {
-      fs.writeFileSync(directory + 'Makefile', fs.readFileSync(__dirname + '/Makefile'));
       expect(builder.isEligible(directory)).toBe(true);
     });
 
-    it('should give default target', () => {
-      fs.writeFileSync(directory + 'Makefile', fs.readFileSync(__dirname + '/Makefile'));
+    it('should yield available targets', () => {
       waitsForPromise(() => {
         return Promise.resolve(builder.settings(directory)).then((settings) => {
-          expect(settings.length).toBe(1);
-          const s = settings[0];
-          expect(s.name).toBe('GNU Make: default');
-          expect(s.exec).toBe('make');
-          expect(s.args).toBe(undefined);
-          expect(s.sh).toBe(false);
+          expect(settings.length).toBe(4); // default (no args), all, some_custom and Makefile
+
+          const defaultTarget = settings[0]; // default MUST be first
+          expect(defaultTarget.name).toBe('GNU Make: default (no args)');
+          expect(defaultTarget.exec).toBe('make');
+          expect(defaultTarget.args).toBe(undefined);
+          expect(defaultTarget.sh).toBe(false);
+
+          const target = settings.find(setting => setting.name === 'GNU Make: some_custom');
+          expect(target.name).toBe('GNU Make: some_custom');
+          expect(target.exec).toBe('make');
+          expect(target.args).toEqual([ 'some_custom' ]);
+          expect(target.sh).toBe(false);
+        });
+      });
+    });
+  });
+
+  describe('when makefile exists but make can not run', () => {
+    const originalPath = process.env.PATH;
+    beforeEach(() => {
+      fs.writeFileSync(directory + 'Makefile', fs.readFileSync(`${__dirname}/Makefile`));
+      process.env.PATH = '';
+    });
+
+    afterEach(() => {
+      process.env.PATH = originalPath;
+    });
+
+    it('should be eligible', () => {
+      expect(builder.isEligible(directory)).toBe(true);
+    });
+
+    it('should list the default target', () => {
+      waitsForPromise(() => {
+        return Promise.resolve(builder.settings(directory)).then((settings) => {
+          expect(settings.length).toBe(1); // default (no args)
+
+          const defaultTarget = settings[0]; // default MUST be first
+          expect(defaultTarget.name).toBe('GNU Make: default (no args)');
+          expect(defaultTarget.exec).toBe('make');
+          expect(defaultTarget.args).toBe(undefined);
+          expect(defaultTarget.sh).toBe(false);
         });
       });
     });
