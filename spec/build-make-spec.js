@@ -11,6 +11,7 @@ describe('make', () => {
   const Builder = provideBuilder();
 
   beforeEach(() => {
+    atom.config.set('build-make.useMake', true);
     waitsForPromise(() => {
       return vouch(temp.mkdir, 'atom-build-make-spec-')
         .then((dir) => vouch(fs.realpath, dir))
@@ -48,6 +49,16 @@ describe('make', () => {
           expect(target.exec).toBe('make');
           expect(target.args).toEqual([ 'some_custom' ]);
           expect(target.sh).toBe(false);
+        });
+      });
+    });
+
+    it('should yield a subset of all targets if it does not use make to extract targets', () => {
+      atom.config.set('build-make.useMake', false);
+      waitsForPromise(() => {
+        return Promise.resolve(builder.settings(directory)).then((settings) => {
+          const targetNames = settings.map(s => s.name).sort();
+          expect(targetNames).toEqual([ 'GNU Make: default (no args)', 'GNU Make: all', 'GNU Make: some_custom' ].sort());
         });
       });
     });
