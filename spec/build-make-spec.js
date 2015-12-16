@@ -12,6 +12,7 @@ describe('make', () => {
 
   beforeEach(() => {
     atom.config.set('build-make.useMake', true);
+    atom.config.set('build-make.jobs', 2);
     waitsForPromise(() => {
       return vouch(temp.mkdir, 'atom-build-make-spec-')
         .then((dir) => vouch(fs.realpath, dir))
@@ -36,18 +37,18 @@ describe('make', () => {
     it('should yield available targets', () => {
       waitsForPromise(() => {
         return Promise.resolve(builder.settings(directory)).then((settings) => {
-          expect(settings.length).toBe(4); // default (no args), all, some_custom and Makefile
+          expect(settings.length).toBe(4); // default (no target), all, some_custom and Makefile
 
           const defaultTarget = settings[0]; // default MUST be first
-          expect(defaultTarget.name).toBe('GNU Make: default (no args)');
+          expect(defaultTarget.name).toBe('GNU Make: default (no target)');
           expect(defaultTarget.exec).toBe('make');
-          expect(defaultTarget.args).toBe(undefined);
+          expect(defaultTarget.args).toEqual([ '-j2' ]);
           expect(defaultTarget.sh).toBe(false);
 
           const target = settings.find(setting => setting.name === 'GNU Make: some_custom');
           expect(target.name).toBe('GNU Make: some_custom');
           expect(target.exec).toBe('make');
-          expect(target.args).toEqual([ 'some_custom' ]);
+          expect(target.args).toEqual([ '-j2', 'some_custom' ]);
           expect(target.sh).toBe(false);
         });
       });
@@ -58,7 +59,7 @@ describe('make', () => {
       waitsForPromise(() => {
         return Promise.resolve(builder.settings(directory)).then((settings) => {
           const targetNames = settings.map(s => s.name).sort();
-          expect(targetNames).toEqual([ 'GNU Make: default (no args)', 'GNU Make: all', 'GNU Make: some_custom' ].sort());
+          expect(targetNames).toEqual([ 'GNU Make: default (no target)', 'GNU Make: all', 'GNU Make: some_custom' ].sort());
         });
       });
     });
@@ -82,12 +83,12 @@ describe('make', () => {
     it('should list the default target', () => {
       waitsForPromise(() => {
         return Promise.resolve(builder.settings(directory)).then((settings) => {
-          expect(settings.length).toBe(1); // default (no args)
+          expect(settings.length).toBe(1); // default (no target)
 
           const defaultTarget = settings[0]; // default MUST be first
-          expect(defaultTarget.name).toBe('GNU Make: default (no args)');
+          expect(defaultTarget.name).toBe('GNU Make: default (no target)');
           expect(defaultTarget.exec).toBe('make');
-          expect(defaultTarget.args).toBe(undefined);
+          expect(defaultTarget.args).toEqual([ '-j2' ]);
           expect(defaultTarget.sh).toBe(false);
         });
       });
