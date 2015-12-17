@@ -57,6 +57,7 @@ describe('make', () => {
     it('should yield a subset of all targets if it does not use make to extract targets', () => {
       atom.config.set('build-make.useMake', false);
       waitsForPromise(() => {
+        expect(builder.isEligible(directory)).toBe(true);
         return Promise.resolve(builder.settings(directory)).then((settings) => {
           const targetNames = settings.map(s => s.name).sort();
           expect(targetNames).toEqual([ 'GNU Make: default (no target)', 'GNU Make: all', 'GNU Make: some_custom' ].sort());
