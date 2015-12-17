@@ -11,6 +11,7 @@ describe('make', () => {
   const Builder = provideBuilder();
 
   beforeEach(() => {
+    atom.config.set('build-make.useMake', true);
     atom.config.set('build-make.jobs', 2);
     waitsForPromise(() => {
       return vouch(temp.mkdir, 'atom-build-make-spec-')
@@ -36,7 +37,7 @@ describe('make', () => {
     it('should yield available targets', () => {
       waitsForPromise(() => {
         return Promise.resolve(builder.settings(directory)).then((settings) => {
-          expect(settings.length).toBe(4); // default (no args), all, some_custom and Makefile
+          expect(settings.length).toBe(4); // default (no target), all, some_custom and Makefile
 
           const defaultTarget = settings[0]; // default MUST be first
           expect(defaultTarget.name).toBe('GNU Make: default (no target)');
@@ -49,6 +50,17 @@ describe('make', () => {
           expect(target.exec).toBe('make');
           expect(target.args).toEqual([ '-j2', 'some_custom' ]);
           expect(target.sh).toBe(false);
+        });
+      });
+    });
+
+    it('should yield a subset of all targets if it does not use make to extract targets', () => {
+      atom.config.set('build-make.useMake', false);
+      waitsForPromise(() => {
+        expect(builder.isEligible(directory)).toBe(true);
+        return Promise.resolve(builder.settings(directory)).then((settings) => {
+          const targetNames = settings.map(s => s.name).sort();
+          expect(targetNames).toEqual([ 'GNU Make: default (no target)', 'GNU Make: all', 'GNU Make: some_custom' ].sort());
         });
       });
     });
@@ -72,7 +84,7 @@ describe('make', () => {
     it('should list the default target', () => {
       waitsForPromise(() => {
         return Promise.resolve(builder.settings(directory)).then((settings) => {
-          expect(settings.length).toBe(1); // default (no args)
+          expect(settings.length).toBe(1); // default (no target)
 
           const defaultTarget = settings[0]; // default MUST be first
           expect(defaultTarget.name).toBe('GNU Make: default (no target)');
