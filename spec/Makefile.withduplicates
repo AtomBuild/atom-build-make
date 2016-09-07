@@ -1,0 +1,7 @@
+all:
+	@echo "Building all"
+
+duplicated: all
+
+duplicated:
+	@echo "Building duplicated"
