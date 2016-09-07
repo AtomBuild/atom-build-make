@@ -70,7 +70,7 @@ describe('make', () => {
     beforeEach(() => {
       fs.writeFileSync(directory + 'Makefile', fs.readFileSync(`${__dirname}/Makefile.withduplicates`));
     });
-    it('should yield only a single target for each duplicate entry',() => {
+    it('should yield only a single target for each duplicate entry', () => {
       atom.config.set('build-make.useMake', false); // Not using make to avoid extracting Makefile as pseudotarget
       waitsForPromise(() => {
         expect(builder.isEligible(directory)).toBe(true);
