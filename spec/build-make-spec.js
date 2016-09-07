@@ -66,6 +66,22 @@ describe('make', () => {
     });
   });
 
+  describe('when makefile contains duplicate targets', () => {
+    beforeEach(() => {
+      fs.writeFileSync(directory + 'Makefile', fs.readFileSync(`${__dirname}/Makefile.withduplicates`));
+    });
+    it('should yield only a single target for each duplicate entry', () => {
+      atom.config.set('build-make.useMake', false); // Not using make to avoid extracting Makefile as pseudotarget
+      waitsForPromise(() => {
+        expect(builder.isEligible(directory)).toBe(true);
+        return Promise.resolve(builder.settings(directory)).then((settings) => {
+          const targetNames = settings.map(s => s.name).sort();
+          expect(targetNames).toEqual([ 'GNU Make: default (no target)', 'GNU Make: all', 'GNU Make: duplicated' ].sort());
+        });
+      });
+    });
+  });
+
   describe('when makefile exists but make can not run', () => {
     const originalPath = process.env.PATH;
     beforeEach(() => {
