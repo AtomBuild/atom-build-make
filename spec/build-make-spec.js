@@ -123,16 +123,24 @@ describe('make', () => {
   describe('when bear integration is enabled', () => {
     beforeEach(() => {
       atom.config.set('build-make.useBear', true);
-      spyOn(hasbin, 'sync').andReturn(true); // let's make it think bear executable is present
+      fs.writeFileSync(directory + 'Makefile', fs.readFileSync(`${__dirname}/Makefile`));
     });
 
-    it('should run it and add `make` as an argument', () => {
-      waitsForPromise(() => {
-        return Promise.resolve(builder.settings(directory)).then((settings) => {
-          const defaultTarget = settings[0]; // default MUST be first
+    describe('when bear is in $PATH', () => {
+      beforeEach(() => {
+        spyOn(hasbin, 'sync').andReturn(true); // let's make it think bear executable is present
+      });
 
-          expect(defaultTarget.exec).toBe('bear');
-          expect(defaultTarget.args).toEqual([ 'make', '-j2' ]);
+      it('should add a new "generate compile_commands.json" target', () => {
+        waitsForPromise(() => {
+          return Promise.resolve(builder.settings(directory)).then((settings) => {
+            const target = settings[settings.length-1];
+
+            expect(target.name).toBe('GNU Make: generate compile_commands.json (with bear)');
+            expect(target.exec).toBe('make clean && bear make -j2');
+            expect(target.args).toEqual([]);
+            expect(target.sh).toBe(true);
+          });
         });
       });
     });
@@ -142,13 +150,12 @@ describe('make', () => {
         spyOn(hasbin, 'sync').andReturn(false);  // let's make it think bear executable is NOT present
       });
 
-      it('should just run `make`', () => {
+      it('should not create a new target', () => {
         waitsForPromise(() => {
           return Promise.resolve(builder.settings(directory)).then((settings) => {
-            const defaultTarget = settings[0]; // default MUST be first
+            const target = settings.find(setting => setting.name === 'GNU Make: generate compile_commands.json (with bear)');
 
-            expect(defaultTarget.exec).toBe('make');
-            expect(defaultTarget.args).toEqual([ '-j2' ]);
+            expect(target).toBeUndefined();
           });
         });
       });
