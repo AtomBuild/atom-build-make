@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import temp from 'temp';
 import { vouch } from 'atom-build-spec-helpers';
 import { provideBuilder } from '../lib/make';
+import hasbin from 'hasbin'
 
 describe('make', () => {
   let directory;
@@ -122,6 +123,7 @@ describe('make', () => {
   describe('when bear integration is enabled', () => {
     beforeEach(() => {
       atom.config.set('build-make.useBear', true);
+      spyOn(hasbin, 'sync').andReturn(true); // let's make it think bear executable is present
     });
 
     it('should run it and add `make` as an argument', () => {
@@ -131,6 +133,23 @@ describe('make', () => {
 
           expect(defaultTarget.exec).toBe('bear');
           expect(defaultTarget.args).toEqual([ 'make', '-j2' ]);
+        });
+      });
+    });
+
+    describe('when bear is not in $PATH', () => {
+      beforeEach(() => {
+        spyOn(hasbin, 'sync').andReturn(false);  // let's make it think bear executable is NOT present
+      });
+
+      it('should just run `make`', () => {
+        waitsForPromise(() => {
+          return Promise.resolve(builder.settings(directory)).then((settings) => {
+            const defaultTarget = settings[0]; // default MUST be first
+
+            expect(defaultTarget.exec).toBe('make');
+            expect(defaultTarget.args).toEqual([ '-j2' ]);
+          });
         });
       });
     });
