@@ -13,6 +13,7 @@ describe('make', () => {
   beforeEach(() => {
     atom.config.set('build-make.useMake', true);
     atom.config.set('build-make.jobs', 2);
+    atom.config.set('build-make.useBear', false)
     waitsForPromise(() => {
       return vouch(temp.mkdir, 'atom-build-make-spec-')
         .then((dir) => vouch(fs.realpath, dir))
