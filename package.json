@@ -32,6 +32,8 @@
   ],
   "main": "lib/make.js",
   "dependencies": {
+    "hasbin": "^1.2.3",
+    "minimatch": "^3.0.3",
     "voucher": "^0.1.2"
   }
 }
