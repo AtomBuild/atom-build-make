@@ -136,7 +136,7 @@ describe('make', () => {
           return Promise.resolve(builder.settings(directory)).then((settings) => {
             const target = settings[settings.length - 1];
 
-            expect(target.name).toBe('GNU Make: generate compile_commands.json (with bear)');
+            expect(target.name).toBe('BEAR: compile_commands.json');
             expect(target.exec).toBe('make clean && bear make -j2');
             expect(target.args).toEqual([]);
             expect(target.sh).toBe(true);
@@ -153,7 +153,7 @@ describe('make', () => {
       it('should not create a new target', () => {
         waitsForPromise(() => {
           return Promise.resolve(builder.settings(directory)).then((settings) => {
-            const target = settings.find(setting => setting.name === 'GNU Make: generate compile_commands.json (with bear)');
+            const target = settings.find(setting => setting.name === 'BEAR: compile_commands.json');
 
             expect(target).toBeUndefined();
           });
