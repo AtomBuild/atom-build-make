@@ -118,4 +118,21 @@ describe('make', () => {
       expect(builder.isEligible(directory)).toBe(false);
     });
   });
+
+  describe('when bear integration is enabled', () => {
+    beforeEach(() => {
+      atom.config.set('build-make.useBear', true);
+    });
+
+    it('should run it and add `make` as an argument', () => {
+      waitsForPromise(() => {
+        return Promise.resolve(builder.settings(directory)).then((settings) => {
+          const defaultTarget = settings[0]; // default MUST be first
+
+          expect(defaultTarget.exec).toBe('bear');
+          expect(defaultTarget.args).toEqual([ 'make', '-j2' ]);
+        });
+      });
+    });
+  });
 });
