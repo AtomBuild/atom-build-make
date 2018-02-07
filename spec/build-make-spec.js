@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import temp from 'temp';
 import { vouch } from 'atom-build-spec-helpers';
 import { provideBuilder } from '../lib/make';
+import hasbin from 'hasbin';
 
 describe('make', () => {
   let directory;
@@ -13,6 +14,7 @@ describe('make', () => {
   beforeEach(() => {
     atom.config.set('build-make.useMake', true);
     atom.config.set('build-make.jobs', 2);
+    atom.config.set('build-make.useBear', false);
     waitsForPromise(() => {
       return vouch(temp.mkdir, 'atom-build-make-spec-')
         .then((dir) => vouch(fs.realpath, dir))
@@ -115,6 +117,48 @@ describe('make', () => {
   describe('when makefile does not exist', () => {
     it('should not be eligible', () => {
       expect(builder.isEligible(directory)).toBe(false);
+    });
+  });
+
+  describe('when bear integration is enabled', () => {
+    beforeEach(() => {
+      atom.config.set('build-make.useBear', true);
+      fs.writeFileSync(directory + 'Makefile', fs.readFileSync(`${__dirname}/Makefile`));
+    });
+
+    describe('when bear is in $PATH', () => {
+      beforeEach(() => {
+        spyOn(hasbin, 'sync').andReturn(true); // let's make it think bear executable is present
+      });
+
+      it('should add a new "generate compile_commands.json" target', () => {
+        waitsForPromise(() => {
+          return Promise.resolve(builder.settings(directory)).then((settings) => {
+            const target = settings[settings.length - 1];
+
+            expect(target.name).toBe('BEAR: compile_commands.json');
+            expect(target.exec).toBe('make clean && bear make -j2');
+            expect(target.args).toEqual([]);
+            expect(target.sh).toBe(true);
+          });
+        });
+      });
+    });
+
+    describe('when bear is not in $PATH', () => {
+      beforeEach(() => {
+        spyOn(hasbin, 'sync').andReturn(false);  // let's make it think bear executable is NOT present
+      });
+
+      it('should not create a new target', () => {
+        waitsForPromise(() => {
+          return Promise.resolve(builder.settings(directory)).then((settings) => {
+            const target = settings.find(setting => setting.name === 'BEAR: compile_commands.json');
+
+            expect(target).toBeUndefined();
+          });
+        });
+      });
     });
   });
 });
